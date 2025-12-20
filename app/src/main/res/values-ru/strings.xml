@@ -8,6 +8,10 @@
 
     <!-- Моды -->
     <string name="mods_title">🧩 Моды (%d)</string>
+    <string name="mods_section_title">🧩 Моды</string>
+    <string name="external_mods_label">Внешние моды</string>
+    <string name="inbuilt_mods_label">Встроенные моды</string>
+    <string name="manage_mods">Управление модами</string>
     <string name="no_mods_found">Моды не найдены</string>
     <string name="mod_load_order">Порядок загрузки: %d</string>
     <string name="drag_to_reorder">Перетащите для изменения порядка</string>
@@ -340,11 +344,15 @@
     <string name="inbuilt_mod_hud_desc">Скрыть панель быстрого доступа и UI</string>
     <string name="inbuilt_mod_autosprint">Авто-спринт</string>
     <string name="inbuilt_mod_autosprint_desc">Включение/выключение спринта</string>
+    <string name="inbuilt_mod_chick_pet">Питомец-цыплёнок</string>
+    <string name="inbuilt_mod_chick_pet_desc">Милый пиксельный цыплёнок, который гуляет, спит и убегает при касании!</string>
     <string name="inbuilt_badge">ВСТРОЕН</string>
     <string name="autosprint_key_ctrl">Левый Ctrl</string>
     <string name="autosprint_key_shift">Shift</string>
     <string name="autosprint_key_label">Кнопка спринта:</string>
     <string name="configure">Настроить</string>
+    <string name="overlay_button_size">Размер кнопки наложения</string>
+    <string name="settings">Настройки</string>
 
     <!-- Memory Editor -->
     <string name="memory_editor_enable">Редактор памяти</string>
@@ -371,5 +379,17 @@
     <string name="memory_overlay_new_value">Новое значение</string>
     <string name="memory_overlay_new_value_hint">Введите значение для применения</string>
     <string name="memory_overlay_toggleable">Переключаемая</string>
+    <string name="memory_editor_warning_title">⚠️ Предупреждение для разработчиков</string>
+    <string name="memory_editor_warning_message">Редактор памяти — это продвинутый инструмент, предназначенный ТОЛЬКО для разработки модов и отладки.\n\nЭта функция НЕ для обычных пользователей. Неправильное использование может привести к:\n• Сбоям игры\n• Повреждению данных\n• Непредвиденному поведению\n\nВключайте только если понимаете, что делаете.</string>
+
+    <!-- Extract Structures -->
+    <string name="extract_structures">Извлечь структуры</string>
+    <string name="no_structures_found">В этом мире не найдено структур</string>
+    <string name="structures_exported">Экспортировано %d структур в %s</string>
+    <string name="structures_exported_zip">Экспортировано %d структур в ZIP</string>
+    <string name="structure_found">Структура найдена</string>
+    <string name="structure_found_with_size">%1$s (%2$s)</string>
+    <string name="structure_exported">Экспортировано: %s</string>
+    <string name="extract">Извлечь</string>
 
 </resources>

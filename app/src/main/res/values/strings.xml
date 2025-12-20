@@ -8,6 +8,10 @@
 
     <!-- Mods -->
     <string name="mods_title">🧩 Mods (%d)</string>
+    <string name="mods_section_title">🧩 Mods</string>
+    <string name="external_mods_label">External Mods</string>
+    <string name="inbuilt_mods_label">Inbuilt Mods</string>
+    <string name="manage_mods">Manage Mods</string>
     <string name="no_mods_found">No Mods Found</string>
     <string name="mod_load_order">Load order: %d</string>
     <string name="drag_to_reorder">Drag to reorder</string>
@@ -343,11 +347,15 @@
     <string name="inbuilt_mod_hud_desc">Hide hotbar and UI</string>
     <string name="inbuilt_mod_autosprint">Auto Sprint</string>
     <string name="inbuilt_mod_autosprint_desc">Toggle sprint on/off</string>
+    <string name="inbuilt_mod_chick_pet">Chick Pet</string>
+    <string name="inbuilt_mod_chick_pet_desc">A cute pixelated chick that walks around, sleeps, and runs when touched!</string>
     <string name="inbuilt_badge">INBUILT</string>
     <string name="autosprint_key_ctrl">Ctrl Left</string>
     <string name="autosprint_key_shift">Shift</string>
     <string name="autosprint_key_label">Sprint Key:</string>
     <string name="configure">Configure</string>
+    <string name="overlay_button_size">Overlay Button Size</string>
+    <string name="settings">Settings</string>
 
     <!-- Memory Editor -->
     <string name="memory_editor_enable">Memory Editor</string>
@@ -374,4 +382,17 @@
     <string name="memory_overlay_new_value">New Value</string>
     <string name="memory_overlay_new_value_hint">Enter value to apply</string>
     <string name="memory_overlay_toggleable">Toggleable</string>
+    <string name="memory_editor_warning_title">⚠️ Developer Feature Warning</string>
+    <string name="memory_editor_warning_message">The Memory Editor is an advanced tool intended ONLY for mod development and debugging purposes.\n\nThis feature is NOT for normal users. Improper use may cause:\n• Game crashes\n• Data corruption\n• Unexpected behavior\n\nOnly enable this if you understand what you are doing.</string>
+
+    <!-- Extract Structures -->
+    <string name="extract_structures">Extract Structures</string>
+    <string name="no_structures_found">No structures found in this world</string>
+    <string name="structures_exported">Exported %d structures to %s</string>
+    <string name="structures_exported_zip">Exported %d structures to ZIP</string>
+    <string name="structure_found">Structure Found</string>
+    <string name="structure_found_with_size">%1$s (%2$s)</string>
+    <string name="structure_exported">Exported: %s</string>
+    <string name="extract">Extract</string>
+
 </resources>

@@ -30,7 +30,7 @@ import org.levimc.launcher.ui.animation.DynamicAnim;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddedInbuiltModsAdapter extends RecyclerView.Adapter<AddedInbuiltModsAdapter.ViewHolder> {
+public class InbuiltModsListAdapter extends RecyclerView.Adapter<InbuiltModsListAdapter.ViewHolder> {
 
     private List<InbuiltMod> mods = new ArrayList<>();
     private OnRemoveClickListener onRemoveClickListener;
@@ -51,7 +51,7 @@ public class AddedInbuiltModsAdapter extends RecyclerView.Adapter<AddedInbuiltMo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_inbuilt_mod_added, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_inbuilt_mod_list, parent, false);
         return new ViewHolder(v);
     }
 
@@ -60,7 +60,6 @@ public class AddedInbuiltModsAdapter extends RecyclerView.Adapter<AddedInbuiltMo
         InbuiltMod mod = mods.get(position);
         Context context = holder.itemView.getContext();
         holder.name.setText(mod.getName());
-        holder.description.setText(mod.getDescription());
 
         int iconRes = getModIcon(mod.getId());
         holder.icon.setImageResource(iconRes);
@@ -166,14 +165,13 @@ public class AddedInbuiltModsAdapter extends RecyclerView.Adapter<AddedInbuiltMo
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView icon;
-        TextView name, description;
+        TextView name;
         ImageButton settingsButton, removeButton;
 
         ViewHolder(View itemView) {
             super(itemView);
             icon = itemView.findViewById(R.id.inbuilt_mod_icon);
             name = itemView.findViewById(R.id.inbuilt_mod_name);
-            description = itemView.findViewById(R.id.inbuilt_mod_desc);
             settingsButton = itemView.findViewById(R.id.inbuilt_mod_settings);
             removeButton = itemView.findViewById(R.id.remove_inbuilt_button);
         }

@@ -17,6 +17,9 @@ public class InbuiltModManager {
     private static final String PREFS_NAME = "inbuilt_mods_prefs";
     private static final String KEY_ADDED_MODS = "added_mods";
     private static final String KEY_AUTOSPRINT_KEY = "autosprint_key";
+    private static final String KEY_OVERLAY_BUTTON_SIZE_PREFIX = "overlay_button_size_";
+    private static final String KEY_OVERLAY_BUTTON_SIZE_GLOBAL = "overlay_button_size";
+    private static final int DEFAULT_OVERLAY_BUTTON_SIZE = 48;
 
     private static volatile InbuiltModManager instance;
     private final SharedPreferences prefs;
@@ -52,6 +55,9 @@ public class InbuiltModManager {
         mods.add(new InbuiltMod(ModIds.AUTO_SPRINT,
             context.getString(R.string.inbuilt_mod_autosprint),
             context.getString(R.string.inbuilt_mod_autosprint_desc), true, addedMods.contains(ModIds.AUTO_SPRINT)));
+        mods.add(new InbuiltMod(ModIds.CHICK_PET,
+            context.getString(R.string.inbuilt_mod_chick_pet),
+            context.getString(R.string.inbuilt_mod_chick_pet_desc), false, addedMods.contains(ModIds.CHICK_PET)));
         return mods;
     }
 
@@ -97,6 +103,22 @@ public class InbuiltModManager {
 
     public void setAutoSprintKey(int keyCode) {
         prefs.edit().putInt(KEY_AUTOSPRINT_KEY, keyCode).apply();
+    }
+
+    public int getOverlayButtonSize() {
+        return prefs.getInt(KEY_OVERLAY_BUTTON_SIZE_GLOBAL, DEFAULT_OVERLAY_BUTTON_SIZE);
+    }
+
+    public void setOverlayButtonSize(int sizeDp) {
+        prefs.edit().putInt(KEY_OVERLAY_BUTTON_SIZE_GLOBAL, sizeDp).apply();
+    }
+
+    public int getOverlayButtonSize(String modId) {
+        return prefs.getInt(KEY_OVERLAY_BUTTON_SIZE_PREFIX + modId, DEFAULT_OVERLAY_BUTTON_SIZE);
+    }
+
+    public void setOverlayButtonSize(String modId, int sizeDp) {
+        prefs.edit().putInt(KEY_OVERLAY_BUTTON_SIZE_PREFIX + modId, sizeDp).apply();
     }
 
     private void savePrefs() {

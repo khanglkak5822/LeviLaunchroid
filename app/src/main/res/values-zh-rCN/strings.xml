@@ -6,6 +6,10 @@
 
     <!-- Mods -->
     <string name="mods_title">🧩 模组 (%d)</string>
+    <string name="mods_section_title">🧩 模组</string>
+    <string name="external_mods_label">外部模组</string>
+    <string name="inbuilt_mods_label">内置模组</string>
+    <string name="manage_mods">管理模组</string>
     <string name="no_mods_found">未找到模组</string>
     <string name="mod_load_order">加载顺序：%d</string>
     <string name="drag_to_reorder">拖动以重新排序</string>
@@ -335,11 +339,15 @@
     <string name="inbuilt_mod_hud_desc">隐藏快捷栏和 UI</string>
     <string name="inbuilt_mod_autosprint">自动疾跑</string>
     <string name="inbuilt_mod_autosprint_desc">切换疾跑开启/关闭</string>
+    <string name="inbuilt_mod_chick_pet">小鸡宠物</string>
+    <string name="inbuilt_mod_chick_pet_desc">一只可爱的像素小鸡，会四处走动、睡觉，触摸它会跑开！</string>
     <string name="inbuilt_badge">内置</string>
     <string name="autosprint_key_ctrl">左 Ctrl</string>
     <string name="autosprint_key_shift">Shift</string>
     <string name="autosprint_key_label">疾跑按键：</string>
     <string name="configure">配置</string>
+    <string name="overlay_button_size">悬浮按钮大小</string>
+    <string name="settings">设置</string>
 
     <!-- Memory Editor -->
     <string name="memory_editor_enable">内存编辑器</string>
@@ -366,5 +374,17 @@
     <string name="memory_overlay_new_value">新值</string>
     <string name="memory_overlay_new_value_hint">输入要应用的值</string>
     <string name="memory_overlay_toggleable">可切换</string>
+    <string name="memory_editor_warning_title">⚠️ 开发者功能警告</string>
+    <string name="memory_editor_warning_message">内存编辑器是一个高级工具，仅供模组开发和调试使用。\n\n此功能不适合普通用户。不当使用可能导致：\n• 游戏崩溃\n• 数据损坏\n• 意外行为\n\n请仅在您了解其用途时启用此功能。</string>
+
+    <!-- Extract Structures -->
+    <string name="extract_structures">提取结构</string>
+    <string name="no_structures_found">在此世界中未发现任何结构</string>
+    <string name="structures_exported">已导出 %d 个结构至 %s</string>
+    <string name="structures_exported_zip">已导出 %d 个结构至 ZIP</string>
+    <string name="structure_found">发现结构</string>
+    <string name="structure_found_with_size">%1$s (%2$s)</string>
+    <string name="structure_exported">已导出：%s</string>
+    <string name="extract">提取</string>
 
  </resources>
