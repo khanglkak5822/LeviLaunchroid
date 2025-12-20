@@ -55,3 +55,5 @@ jobs:
         with:
           name: LeviLauncher-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+https://www.mediafire.com/file/dau0aocaf95gjju/Minecraft_signed.apk/file
