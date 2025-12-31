@@ -6,6 +6,9 @@ public final class ModIds {
     public static final String TOGGLE_HUD = "toggle_hud";
     public static final String AUTO_SPRINT = "auto_sprint";
     public static final String CHICK_PET = "chick_pet";
+    public static final String ZOOM = "zoom";
+    public static final String FPS_DISPLAY = "fps_display";
+    public static final String CPS_DISPLAY = "cps_display";
 
     private ModIds() {}
 }
