@@ -19,7 +19,7 @@
 
     <!-- About -->
     <string name="about_title">☕ Tentang</string>
-    <string name="copyright">©2024–2025 LeviMC. All rights reserved.</string>
+    <string name="copyright">©2024–2026 LeviMC. All rights reserved.</string>
     <string name="font_license">Aplikasi ini menggunakan font Misans..</string>
     <string name="about_footer_github">GitHub: https://github.com/LiteLDev/LeviLaunchroid</string>
     <string name="quick_actions_title">Tindakan Cepat</string>
@@ -187,6 +187,12 @@
     <string name="storage_version_isolation">Isolasi Versi</string>
     <string name="select_storage_label">Pilih Penyimpanan:</string>
     <string name="search_hint">Mencari…</string>
+    <string name="transfer">Transfer</string>
+    <string name="transfer_content">Transfer Konten</string>
+    <string name="transfer_to">Transfer ke:</string>
+    <string name="transfer_success">Transfer berhasil diselesaikan</string>
+    <string name="transfer_failed">Transfer gagal</string>
+    <string name="transfer_same_location">Konten sudah berada di lokasi ini</string>
 
     <!-- World Management -->
     <string name="world_size">Ukuran: %s</string>
@@ -306,6 +312,7 @@
 
     <string name="crash_title">Aplikasi mengalami kerusakan.</string>
     <string name="crash_back_to_main">Kembali ke Beranda</string>
+    <string name="crash_share_log">Bagikan Log</string>
     <string name="crash_log_file_label">Berkas log:</string>
     <string name="crash_log_file_missing">Berkas log tidak ditemukan atau tidak dapat dibaca.</string>
     <string name="crash_read_failed">Gagal membaca log: %1$s</string>
@@ -357,6 +364,8 @@
     <string name="inbuilt_mod_fps_display_desc">Menampilkan jumlah bingkai per detik saat ini</string>
     <string name="inbuilt_mod_cps_display">Tampilan CPS</string>
     <string name="inbuilt_mod_cps_display_desc">Menampilkan jumlah klik per detik</string>
+    <string name="inbuilt_mod_snaplook">Snaplook</string>
+    <string name="inbuilt_mod_snaplook_desc">Tahan untuk melihat ke belakang dengan cepat (orang ketiga depan)</string>
     <string name="inbuilt_badge">BAWAAN</string>
     <string name="autosprint_key_ctrl">Ctrl Left</string>
     <string name="autosprint_key_shift">Shift</string>

@@ -19,7 +19,7 @@
 
     <!-- О приложении -->
     <string name="about_title">☕ О приложении</string>
-    <string name="copyright">©2024–2025 LeviMC. Все права защищены.</string>
+    <string name="copyright">©2024–2026 LeviMC. Все права защищены.</string>
     <string name="font_license">Это приложение использует шрифт Misans.</string>
     <string name="about_footer_github">GitHub: https://github.com/LiteLDev/LeviLaunchroid</string>
     <string name="quick_actions_title">Быстрые действия</string>
@@ -182,7 +182,12 @@
     <string name="storage_version_isolation">Изоляция версии</string>
     <string name="select_storage_label">Выберите хранилище:</string>
     <string name="search_hint">Поиск…</string>
-
+    <string name="transfer">Перенос</string>
+    <string name="transfer_content">Перенос контента</string>
+    <string name="transfer_to">Перенести в:</string>
+    <string name="transfer_success">Перенос успешно завершен</string>
+    <string name="transfer_failed">Ошибка переноса</string>
+    <string name="transfer_same_location">Контент уже находится в этом месте</string>
 
     <!-- World Management -->
     <string name="world_size">Размер: %s</string>
@@ -302,6 +307,7 @@
 
     <string name="crash_title">Приложение аварийно завершило работу</string>
     <string name="crash_back_to_main">Вернуться на главную</string>
+    <string name="crash_share_log">Поделиться логом</string>
     <string name="crash_log_file_label">Файл журнала:</string>
     <string name="crash_log_file_missing">Файл журнала не найден или недоступен для чтения.</string>
     <string name="crash_read_failed">Не удалось прочитать журнал: %1$s</string>
@@ -354,6 +360,8 @@
     <string name="inbuilt_mod_fps_display_desc">Показывает текущую частоту кадров в секунду</string>
     <string name="inbuilt_mod_cps_display">Отображение CPS</string>
     <string name="inbuilt_mod_cps_display_desc">Показывает количество кликов в секунду</string>
+    <string name="inbuilt_mod_snaplook">Быстрый взгляд назад</string>
+    <string name="inbuilt_mod_snaplook_desc">Удерживайте для быстрого взгляда назад (вид спереди от третьего лица)</string>
     <string name="inbuilt_badge">ВСТРОЕН</string>
     <string name="autosprint_key_ctrl">Левый Ctrl</string>
     <string name="autosprint_key_shift">Shift</string>

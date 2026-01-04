@@ -19,7 +19,7 @@
 
     <!-- About -->
     <string name="about_title">☕ About</string>
-    <string name="copyright">©2024–2025 LeviMC. All rights reserved.</string>
+    <string name="copyright">©2024–2026 LeviMC. All rights reserved.</string>
     <string name="font_license">This app uses the Misans font.</string>
     <string name="about_footer_github">GitHub: https://github.com/LiteLDev/LeviLaunchroid</string>
     <string name="quick_actions_title">Quick Actions</string>
@@ -187,6 +187,12 @@
     <string name="storage_version_isolation">Version Isolation</string>
     <string name="select_storage_label">Select Storage:</string>
     <string name="search_hint">Search…</string>
+    <string name="transfer">Transfer</string>
+    <string name="transfer_content">Transfer Content</string>
+    <string name="transfer_to">Transfer to:</string>
+    <string name="transfer_success">Transfer completed successfully</string>
+    <string name="transfer_failed">Transfer failed</string>
+    <string name="transfer_same_location">Content is already in this location</string>
 
     <!-- World Management -->
     <string name="world_size">Size: %s</string>
@@ -306,6 +312,7 @@
 
     <string name="crash_title">Application crashed</string>
     <string name="crash_back_to_main">Back to Home</string>
+    <string name="crash_share_log">Share Log</string>
     <string name="crash_log_file_label">Log file:</string>
     <string name="crash_log_file_missing">Log file not found or unreadable.</string>
     <string name="crash_read_failed">Failed to read log: %1$s</string>
@@ -357,6 +364,8 @@
     <string name="inbuilt_mod_fps_display_desc">Shows current frames per second</string>
     <string name="inbuilt_mod_cps_display">CPS Display</string>
     <string name="inbuilt_mod_cps_display_desc">Shows clicks per second</string>
+    <string name="inbuilt_mod_snaplook">Snaplook</string>
+    <string name="inbuilt_mod_snaplook_desc">Hold to quickly look behind you (third person front)</string>
     <string name="inbuilt_badge">INBUILT</string>
     <string name="autosprint_key_ctrl">Ctrl Left</string>
     <string name="autosprint_key_shift">Shift</string>
