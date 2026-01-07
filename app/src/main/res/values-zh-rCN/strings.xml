@@ -180,6 +180,8 @@
     <string name="storage_version_isolation">版本隔离</string>
     <string name="select_storage_label">选择存储：</string>
     <string name="search_hint">搜索…</string>
+    <string name="search_properties_hint">搜索属性…</string>
+    <string name="no_matching_properties">未找到匹配的属性</string>
     <string name="transfer">传输</string>
     <string name="transfer_content">传输内容</string>
     <string name="transfer_to">传输至：</string>
@@ -425,5 +427,14 @@
     <string name="mod_status_enabled">已启用</string>
     <string name="mod_status_disabled">已禁用</string>
     <string name="mod_notification_enabled">%s 已启用</string>
+
+    <!-- Options Editor -->
+    <string name="edit_options">编辑选项</string>
+    <string name="options_file_not_found">未找到选项文件</string>
+    <string name="no_options_found">未找到选项</string>
+    <string name="search_options_hint">搜索选项…</string>
+    <string name="no_matching_options">未找到匹配的选项</string>
+    <string name="error_loading_options">加载选项时出错</string>
+    <string name="options_saved">选项保存成功</string>
 
  </resources>

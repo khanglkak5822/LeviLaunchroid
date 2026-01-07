@@ -1,25 +1,23 @@
 package org.levimc.launcher.ui.activities;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import org.levimc.launcher.R;
-import org.levimc.launcher.core.content.WorldEditor;
-import org.levimc.launcher.core.content.WorldEditor.WorldProperty;
-import org.levimc.launcher.databinding.ActivityWorldEditorBinding;
-import org.levimc.launcher.ui.adapter.WorldPropertiesAdapter;
-import org.levimc.launcher.ui.animation.DynamicAnim;
-
-import android.graphics.Color;
-
-import androidx.appcompat.app.AlertDialog;
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import org.levimc.launcher.R;
+import org.levimc.launcher.core.content.OptionsEditor;
+import org.levimc.launcher.core.content.OptionsEditor.OptionProperty;
+import org.levimc.launcher.databinding.ActivityOptionsEditorBinding;
+import org.levimc.launcher.ui.adapter.OptionsPropertiesAdapter;
+import org.levimc.launcher.ui.animation.DynamicAnim;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,61 +28,63 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class WorldEditorActivity extends BaseActivity {
+public class OptionsEditorActivity extends BaseActivity {
 
-    public static final String EXTRA_WORLD_PATH = "world_path";
-    public static final String EXTRA_WORLD_NAME = "world_name";
+    public static final String EXTRA_OPTIONS_PATH = "options_path";
+    public static final String EXTRA_STORAGE_TYPE = "storage_type";
 
-    private ActivityWorldEditorBinding binding;
-    private WorldEditor worldEditor;
-    private WorldPropertiesAdapter adapter;
+    private ActivityOptionsEditorBinding binding;
+    private OptionsEditor optionsEditor;
+    private OptionsPropertiesAdapter adapter;
     private ExecutorService executor;
 
-    private List<WorldProperty> allProperties = new ArrayList<>();
+    private List<OptionProperty> allProperties = new ArrayList<>();
     private boolean hasUnsavedChanges = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityWorldEditorBinding.inflate(getLayoutInflater());
+        binding = ActivityOptionsEditorBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         DynamicAnim.applyPressScaleRecursively(binding.getRoot());
-
         executor = Executors.newSingleThreadExecutor();
 
-        String worldPath = getIntent().getStringExtra(EXTRA_WORLD_PATH);
-        String worldName = getIntent().getStringExtra(EXTRA_WORLD_NAME);
+        String optionsPath = getIntent().getStringExtra(EXTRA_OPTIONS_PATH);
+        String storageType = getIntent().getStringExtra(EXTRA_STORAGE_TYPE);
 
-        if (worldPath == null) {
-            Toast.makeText(this, "Invalid world path", Toast.LENGTH_SHORT).show();
+        if (optionsPath == null) {
+            Toast.makeText(this, R.string.options_file_not_found, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        worldEditor = new WorldEditor(new File(worldPath));
-
-        setupUI(worldName);
-        loadWorldData();
+        optionsEditor = new OptionsEditor(new File(optionsPath));
+        setupUI(storageType);
+        loadOptionsData();
     }
 
-    private void setupUI(String worldName) {
+    private void setupUI(String storageType) {
         binding.backButton.setOnClickListener(v -> onBackPressed());
-        binding.titleText.setText(worldName != null ? worldName : getString(R.string.edit_world));
+        
+        String title = getString(R.string.edit_options);
+        if (storageType != null) {
+            title += " (" + storageType + ")";
+        }
+        binding.titleText.setText(title);
 
         binding.saveButton.setOnClickListener(v -> saveChanges());
         binding.saveButton.setEnabled(false);
 
-        adapter = new WorldPropertiesAdapter();
-        adapter.setOnPropertyChangedListener((property, newValue) -> {
-            worldEditor.updateLevelDatProperty(property.getPath(), newValue);
+        adapter = new OptionsPropertiesAdapter();
+        adapter.setOnOptionChangedListener((property, newValue) -> {
+            optionsEditor.setValue(property.getKey(), newValue);
+            property.setValue(newValue);
             hasUnsavedChanges = true;
             binding.saveButton.setEnabled(true);
         });
 
-        binding.propertiesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        binding.propertiesRecyclerView.setAdapter(adapter);
-
+        binding.optionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.optionsRecyclerView.setAdapter(adapter);
         setupSearchFilter();
     }
 
@@ -92,12 +92,10 @@ public class WorldEditorActivity extends BaseActivity {
         binding.searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 filterProperties(s.toString());
             }
-
             @Override
             public void afterTextChanged(Editable s) {}
         });
@@ -105,86 +103,79 @@ public class WorldEditorActivity extends BaseActivity {
 
     private void filterProperties(String query) {
         String lowerQuery = query.toLowerCase().trim();
-
-        List<WorldProperty> filtered;
+        List<OptionProperty> filtered;
         if (lowerQuery.isEmpty()) {
             filtered = allProperties;
         } else {
             filtered = allProperties.stream()
                 .filter(prop -> prop.getDisplayName().toLowerCase().contains(lowerQuery)
-                        || prop.getPath().toLowerCase().contains(lowerQuery)
+                        || prop.getKey().toLowerCase().contains(lowerQuery)
                         || prop.getCategory().toLowerCase().contains(lowerQuery)
-                        || prop.getValueString().toLowerCase().contains(lowerQuery))
+                        || prop.getValue().toLowerCase().contains(lowerQuery))
                 .collect(Collectors.toList());
         }
 
         if (filtered.isEmpty() && !allProperties.isEmpty()) {
             binding.emptyText.setVisibility(View.VISIBLE);
-            binding.emptyText.setText(R.string.no_matching_properties);
-            binding.propertiesRecyclerView.setVisibility(View.GONE);
+            binding.emptyText.setText(R.string.no_matching_options);
+            binding.optionsRecyclerView.setVisibility(View.GONE);
         } else if (!filtered.isEmpty()) {
             binding.emptyText.setVisibility(View.GONE);
-            binding.propertiesRecyclerView.setVisibility(View.VISIBLE);
-            Map<String, List<WorldProperty>> grouped = groupByCategory(filtered);
+            binding.optionsRecyclerView.setVisibility(View.VISIBLE);
+            Map<String, List<OptionProperty>> grouped = groupByCategory(filtered);
             adapter.setProperties(grouped);
         }
     }
 
-    private void loadWorldData() {
+    private void loadOptionsData() {
         binding.loadingProgress.setVisibility(View.VISIBLE);
-        binding.propertiesRecyclerView.setVisibility(View.GONE);
+        binding.optionsRecyclerView.setVisibility(View.GONE);
         binding.emptyText.setVisibility(View.GONE);
 
         executor.execute(() -> {
             try {
-                if (worldEditor.hasLevelDat()) {
-                    worldEditor.loadLevelDat();
-                }
-
-                runOnUiThread(this::loadLevelDatProperties);
+                optionsEditor.load();
+                runOnUiThread(this::displayOptions);
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     binding.loadingProgress.setVisibility(View.GONE);
                     binding.emptyText.setVisibility(View.VISIBLE);
-                    binding.emptyText.setText(getString(R.string.error_loading_world) + ": " + e.getMessage());
+                    binding.emptyText.setText(getString(R.string.error_loading_options) + ": " + e.getMessage());
                 });
             }
         });
     }
 
-    private void loadLevelDatProperties() {
+    private void displayOptions() {
         binding.loadingProgress.setVisibility(View.GONE);
 
-        if (!worldEditor.isLevelDatLoaded()) {
+        if (!optionsEditor.isLoaded()) {
             binding.emptyText.setVisibility(View.VISIBLE);
-            binding.emptyText.setText(R.string.level_dat_not_found);
-            binding.propertiesRecyclerView.setVisibility(View.GONE);
+            binding.emptyText.setText(R.string.options_file_not_found);
+            binding.optionsRecyclerView.setVisibility(View.GONE);
             return;
         }
 
-        allProperties = worldEditor.getLevelDatProperties();
+        allProperties = optionsEditor.getOptionProperties();
 
         if (allProperties.isEmpty()) {
             binding.emptyText.setVisibility(View.VISIBLE);
-            binding.emptyText.setText(R.string.no_editable_properties);
-            binding.propertiesRecyclerView.setVisibility(View.GONE);
+            binding.emptyText.setText(R.string.no_options_found);
+            binding.optionsRecyclerView.setVisibility(View.GONE);
         } else {
             binding.emptyText.setVisibility(View.GONE);
-            binding.propertiesRecyclerView.setVisibility(View.VISIBLE);
-
-            Map<String, List<WorldProperty>> grouped = groupByCategory(allProperties);
+            binding.optionsRecyclerView.setVisibility(View.VISIBLE);
+            Map<String, List<OptionProperty>> grouped = groupByCategory(allProperties);
             adapter.setProperties(grouped);
         }
     }
 
-    private Map<String, List<WorldProperty>> groupByCategory(List<WorldProperty> properties) {
-        Map<String, List<WorldProperty>> grouped = new LinkedHashMap<>();
-
-        for (WorldProperty prop : properties) {
+    private Map<String, List<OptionProperty>> groupByCategory(List<OptionProperty> properties) {
+        Map<String, List<OptionProperty>> grouped = new LinkedHashMap<>();
+        for (OptionProperty prop : properties) {
             String category = prop.getCategory();
             grouped.computeIfAbsent(category, k -> new ArrayList<>()).add(prop);
         }
-
         return grouped;
     }
 
@@ -196,12 +187,11 @@ public class WorldEditorActivity extends BaseActivity {
 
         executor.execute(() -> {
             try {
-                worldEditor.saveLevelDat();
-
+                optionsEditor.save();
                 runOnUiThread(() -> {
                     binding.loadingProgress.setVisibility(View.GONE);
                     hasUnsavedChanges = false;
-                    Toast.makeText(this, R.string.world_saved, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.options_saved, Toast.LENGTH_SHORT).show();
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -220,13 +210,9 @@ public class WorldEditorActivity extends BaseActivity {
             AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.unsaved_changes)
                     .setMessage(R.string.discard_changes_message)
-                    .setPositiveButton(R.string.discard, (d, which) -> {
-                        d.dismiss();
-                        finish();
-                    })
+                    .setPositiveButton(R.string.discard, (d, which) -> { d.dismiss(); finish(); })
                     .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
                     .show();
-
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
         } else {
@@ -237,8 +223,6 @@ public class WorldEditorActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (executor != null) {
-            executor.shutdown();
-        }
+        if (executor != null) executor.shutdown();
     }
 }
