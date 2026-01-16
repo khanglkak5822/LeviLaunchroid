@@ -1,6 +1,7 @@
 package org.levimc.launcher.core.mods.inbuilt.overlay;
 
 import android.app.Activity;
+import android.view.MotionEvent;
 
 import org.levimc.launcher.core.mods.inbuilt.manager.InbuiltModManager;
 import org.levimc.launcher.core.mods.inbuilt.model.ModIds;
@@ -401,11 +402,14 @@ public class InbuiltOverlayManager {
     }
 
     public boolean handleKeyEvent(int keyCode, int action) {
+        InbuiltModManager manager = InbuiltModManager.getInstance(activity);
+        
         boolean zoomEnabled = isModMenuMode 
             ? modActiveStates.getOrDefault(ModIds.ZOOM, false)
-            : InbuiltModManager.getInstance(activity).isModAdded(ModIds.ZOOM);
+            : manager.isModAdded(ModIds.ZOOM);
         
-        if (zoomEnabled && keyCode == android.view.KeyEvent.KEYCODE_C) {
+        int zoomKeybind = manager.getZoomKeybind();
+        if (zoomEnabled && keyCode == zoomKeybind) {
             if (zoomOverlay != null) {
                 if (action == android.view.KeyEvent.ACTION_DOWN) {
                     zoomOverlay.onKeyDown();
@@ -419,7 +423,7 @@ public class InbuiltOverlayManager {
 
         boolean snaplookEnabled = isModMenuMode
             ? modActiveStates.getOrDefault(ModIds.SNAPLOOK, false)
-            : InbuiltModManager.getInstance(activity).isModAdded(ModIds.SNAPLOOK);
+            : manager.isModAdded(ModIds.SNAPLOOK);
 
         if (snaplookEnabled && keyCode == android.view.KeyEvent.KEYCODE_X) {
             if (snaplookOverlay != null) {
@@ -440,6 +444,20 @@ public class InbuiltOverlayManager {
         if (zoomOverlay != null && zoomOverlay.isZooming()) {
             zoomOverlay.onScroll(scrollDelta);
             return true;
+        }
+        return false;
+    }
+
+    public boolean handleTouchEvent(MotionEvent event) {
+        if (cpsDisplayOverlay != null) {
+            return cpsDisplayOverlay.handleTouchEvent(event);
+        }
+        return false;
+    }
+
+    public boolean handleMouseEvent(MotionEvent event) {
+        if (cpsDisplayOverlay != null) {
+            return cpsDisplayOverlay.handleMouseEvent(event);
         }
         return false;
     }
