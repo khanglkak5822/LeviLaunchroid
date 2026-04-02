@@ -572,8 +572,9 @@ import okhttp3.OkHttpClient;
         refreshAccountHeaderUI();
         updateBetaBadge();
         updateDebugBadge();
-        updateModsUI(viewModel.getModsLiveData().getValue());
+        viewModel.refreshMods();
     }
+
 
     private void updateAbiLabel() {
         if (binding == null) return;
@@ -946,6 +947,9 @@ import okhttp3.OkHttpClient;
 
             @Override
             public void onError(String errorMessage) {
+                if (errorMessage != null && !errorMessage.isEmpty()) {
+                    UIHelper.showToast(MainActivity.this, errorMessage);
+                }
             }
 
             @Override
@@ -966,7 +970,8 @@ import okhttp3.OkHttpClient;
     private void updateModsUI(List<Mod> mods) {
         if (binding == null) return;
         int externalCount = (mods != null) ? mods.size() : 0;
-        int internalCount = InbuiltModManager.getInstance(this).getAddedMods(this).size();
+        InbuiltModManager manager = InbuiltModManager.getInstance(this);
+        int internalCount = manager.isModMenuEnabled() ? 0 : manager.getAddedMods(this).size();
         
         if (externalModsCount != null) {
             externalModsCount.setText(String.valueOf(externalCount));

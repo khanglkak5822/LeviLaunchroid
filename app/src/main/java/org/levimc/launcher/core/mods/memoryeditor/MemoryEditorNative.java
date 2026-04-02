@@ -42,5 +42,6 @@ public class MemoryEditorNative {
     public static native boolean nativeWriteDouble(long address, double value);
     
     public static native int nativeGetSearchType();
+    public static native long nativeGetMinecraftBase();
     public static native void nativeClose();
 }

@@ -447,6 +447,16 @@ Java_org_levimc_launcher_core_mods_memoryeditor_MemoryEditorNative_nativeGetSear
     return g_searchType;
 }
 
+JNIEXPORT jlong JNICALL
+Java_org_levimc_launcher_core_mods_memoryeditor_MemoryEditorNative_nativeGetMinecraftBase(JNIEnv *env, jclass clazz) {
+    for (const auto& region : g_regions) {
+        if (region.name.find("libminecraftpe.so") != std::string::npos) {
+            return static_cast<jlong>(region.start);
+        }
+    }
+    return 0;
+}
+
 JNIEXPORT void JNICALL
 Java_org_levimc_launcher_core_mods_memoryeditor_MemoryEditorNative_nativeClose(JNIEnv *env, jclass clazz) {
     g_results.clear();

@@ -149,7 +149,7 @@
     <string name="toast_delete_failed">Ошибка удаления: %1$s</string>
     <string name="error_delete_builtin_version">Нельзя удалить встроенную версию</string>
     <string name="invalid_mod_file">Ошибка</string>
-    <string name="invalid_mod_file_reason">Допускаются только файлы с расширением .so (например, 4dskins.so). Выбранный файл не является допустимой нативной библиотекой.</string>
+    <string name="invalid_mod_file_reason">Допускаются только файлы .so или ZIP-пакеты модов. Выбранный файл не является допустимым пакетом нативного мода.</string>
     <string name="error_versions">Ошибочные версии</string>
 
     <string name="dialog_title_delete_mod">Удалить мод</string>
@@ -405,6 +405,9 @@
     <string name="memory_editor_freeze">Заморозить</string>
     <string name="memory_editor_delete">Удалить</string>
     <string name="memory_editor_overlay">Оверлей</string>
+    <string name="memory_editor_base_address">База MC: %1$s</string>
+    <string name="memory_editor_base_loading">Загрузка базового адреса…</string>
+    <string name="memory_editor_base_not_found">База MC: Не найдена</string>
     <string name="memory_overlay_config_title">Настройка кнопки оверлея</string>
     <string name="memory_overlay_name">Название кнопки</string>
     <string name="memory_overlay_name_hint">Например: Здоровье, Скорость</string>

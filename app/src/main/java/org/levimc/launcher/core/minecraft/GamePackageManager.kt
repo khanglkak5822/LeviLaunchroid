@@ -1,5 +1,6 @@
 package org.levimc.launcher.core.minecraft
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -9,6 +10,8 @@ import android.util.Log
 import org.levimc.launcher.core.versions.GameVersion
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 import java.util.zip.ZipFile
 
 class GamePackageManager private constructor(private val context: Context, private val version: GameVersion?) {
@@ -28,13 +31,13 @@ class GamePackageManager private constructor(private val context: Context, priva
         "libc++_shared.so",
         "libfmod.so",
         "libMediaDecoders_Android.so",
-        "libmaesdk.so",
         "libHttpClient.Android.so",
         "libminecraftpe.so",
     )
 
     private val systemLoadedLibs = arrayOf(
         "libPlayFabMultiplayer.so",
+        "libmaesdk.so",
         "libpairipcore.so",
 
     )
@@ -145,9 +148,9 @@ class GamePackageManager private constructor(private val context: Context, priva
             val dstFile = File(destDir, lib)
             if (srcFile.exists() && srcFile.length() > 0) {
                 try {
-                    srcFile.copyTo(dstFile, overwrite = true)
-                    dstFile.setReadable(true)
-                    dstFile.setExecutable(true)
+                    srcFile.inputStream().use { input ->
+                        copyStreamToReadOnlyFile(input, dstFile)
+                    }
                     logFileOperation("Copied", lib)
                 } catch (e: Exception) {
                     logFileOperation("Failed to copy", lib, e = e)
@@ -178,19 +181,56 @@ class GamePackageManager private constructor(private val context: Context, priva
                     }
                     val output = File(outputDir, lib)
                     if (output.exists() && output.length() > 0) {
+                        ensureReadOnly(output)
                         return@forEach
                     }
                     zip.getInputStream(entry).use { input ->
-                        FileOutputStream(output).use { out ->
-                            input.copyTo(out)
-                        }
+                        copyStreamToReadOnlyFile(input, output)
                     }
-                    output.setReadable(true)
-                    output.setExecutable(true)
                 }
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to extract libraries from $apkPath: ${e.message}")
+        }
+    }
+
+    private fun copyStreamToReadOnlyFile(input: InputStream, output: File) {
+        ensureParentDirectory(output)
+        if (output.exists() && !output.delete()) {
+            throw IOException("Failed to replace existing file: ${output.absolutePath}")
+        }
+
+        FileOutputStream(output).use { out ->
+            markReadOnlyBeforeWrite(output)
+            input.copyTo(out)
+            out.fd.sync()
+        }
+
+        ensureReadOnly(output)
+    }
+
+    private fun ensureParentDirectory(file: File) {
+        val parent = file.parentFile ?: return
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw IOException("Failed to create parent directory: ${parent.absolutePath}")
+        }
+    }
+
+    private fun markReadOnlyBeforeWrite(file: File) {
+        if (!file.setReadOnly() && file.canWrite()) {
+            throw IOException("Failed to mark file read-only before write: ${file.absolutePath}")
+        }
+    }
+
+    private fun ensureReadOnly(file: File) {
+        if (!file.isFile) {
+            throw IOException("Expected regular file: ${file.absolutePath}")
+        }
+        if (!file.setReadable(true, true) && !file.canRead()) {
+            throw IOException("Failed to mark file readable: ${file.absolutePath}")
+        }
+        if (!file.setReadOnly() && file.canWrite()) {
+            throw IOException("Failed to keep file read-only: ${file.absolutePath}")
         }
     }
 
@@ -200,8 +240,6 @@ class GamePackageManager private constructor(private val context: Context, priva
         }
         if (missing.isNotEmpty()) {
             Log.w(TAG, "Missing libraries in $dir: ${missing.joinToString()}")
-        } else {
-            Log.i(TAG, "All libraries verified in $dir")
         }
     }
 
@@ -211,7 +249,7 @@ class GamePackageManager private constructor(private val context: Context, priva
             if (extra != null) append(" $extra")
             if (e != null) append(": ${e.message}")
         }
-        if (e != null) Log.w(TAG, message) else Log.d(TAG, message)
+        if (e != null) Log.w(TAG, message)
     }
 
     private fun createAssetManager(): AssetManager {
@@ -230,7 +268,6 @@ class GamePackageManager private constructor(private val context: Context, priva
             applicationInfo.splitSourceDirs?.forEach {
                 if (File(it).exists()) {
                     paths.add(it)
-                    Log.d(TAG, "Adding split APK for assets: $it")
                 } else {
                     Log.w(TAG, "Split APK for assets not found: $it")
                 }
@@ -246,7 +283,6 @@ class GamePackageManager private constructor(private val context: Context, priva
         paths.forEach { path ->
             try {
                 addAssetPathMethod.invoke(assets, path)
-                Log.d(TAG, "Added asset path: $path")
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to add asset path $path: ${e.message}")
             }
@@ -255,7 +291,6 @@ class GamePackageManager private constructor(private val context: Context, priva
     }
 
     private fun setupSecurityProvider() {
-        Log.d(TAG, "Setting up security provider...")
         try {
             java.security.Security.insertProviderAt(org.conscrypt.Conscrypt.newProvider(), 1)
         } catch (e: Exception) {
@@ -263,13 +298,25 @@ class GamePackageManager private constructor(private val context: Context, priva
         }
     }
 
-    fun loadLibrary(name: String): Boolean {
+    fun resolveLibraryPath(name: String): String? {
         val libFile = File(nativeLibDir, if (name.startsWith("lib")) name else "lib$name.so")
+        return if (libFile.exists() && libFile.length() > 0) {
+            libFile.absolutePath
+        } else {
+            Log.w(TAG, "Library $name not found in $nativeLibDir")
+            null
+        }
+    }
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    fun loadLibrary(name: String): Boolean {
+        val resolvedPath = resolveLibraryPath(name)
+        val libFile = resolvedPath?.let(::File)
+            ?: File(nativeLibDir, if (name.startsWith("lib")) name else "lib$name.so")
         val libName = libFile.name
         return if (systemLoadedLibs.contains(libName)) {
             try {
                 System.loadLibrary(name.removePrefix("lib").removeSuffix(".so"))
-                Log.d(TAG, "Loaded $name as system library")
                 true
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load system library $name: ${e.message}")
@@ -278,8 +325,8 @@ class GamePackageManager private constructor(private val context: Context, priva
         } else {
             try {
                 if (libFile.exists() && libFile.length() > 0) {
+                    ensureReadOnly(libFile)
                     System.load(libFile.absolutePath)
-                    Log.d(TAG, "Loaded $name from $nativeLibDir")
                     true
                 } else {
                     Log.w(TAG, "Library $name not found in $nativeLibDir, skipping")
@@ -297,7 +344,6 @@ class GamePackageManager private constructor(private val context: Context, priva
         allLibs.forEach { lib ->
             val libName = lib.removePrefix("lib").removeSuffix(".so")
             if (excludeLibs.contains(libName) || excludeLibs.contains(lib)) {
-                Log.d(TAG, "Skipping excluded library: $libName")
                 return@forEach
             }
             if (!loadLibrary(libName)) {

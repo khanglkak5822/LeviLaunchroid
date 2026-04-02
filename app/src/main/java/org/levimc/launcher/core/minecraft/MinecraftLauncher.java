@@ -129,11 +129,7 @@ public class MinecraftLauncher {
 
                 if (shouldLoadHttpClient(version)) {
                     gameManager.loadLibrary("c++_shared");
-                    if (gameManager.loadLibrary("HttpClient.Android")) {
-                        Log.d(TAG, "Loaded Minecraft's libHttpClient.Android.so");
-                    } else {
-                        Log.w(TAG, "HttpClient.Android not found in extracted libs");
-                    }
+                    gameManager.loadLibrary("HttpClient.Android");
                 }
 
                 if (shouldLoadMaesdk(version)) {
@@ -154,6 +150,7 @@ public class MinecraftLauncher {
                     gameManager.loadLibrary("MediaDecoders_Android");
                     gameManager.loadLibrary("minecraftpe");
                 }
+
                 ModNativeLoader.loadEnabledSoMods(ModManager.getInstance(), context.getCacheDir());
 
                 activity.runOnUiThread(() -> {

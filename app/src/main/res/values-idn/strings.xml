@@ -149,7 +149,7 @@
     <string name="toast_delete_failed">Penghapusan gagal: %1$s</string>
     <string name="error_delete_builtin_version">Tidak dapat menghapus versi bawaan</string>
     <string name="invalid_mod_file">Gagal</string>
-    <string name="invalid_mod_file_reason">Hanya file dengan ekstensi .so yang diizinkan (contoh: 4dskins.so). File yang dipilih bukan pustaka native yang valid.</string>
+    <string name="invalid_mod_file_reason">Hanya file .so atau paket mod .zip yang diizinkan. File yang dipilih bukan paket impor mod native yang valid.</string>
     <string name="error_versions">Versi Yang Rusak</string>
 
     <string name="dialog_title_delete_mod">Hapus Mod</string>
@@ -409,6 +409,9 @@
     <string name="memory_editor_freeze">Bekukan</string>
     <string name="memory_editor_delete">Hapus</string>
     <string name="memory_editor_overlay">Overlay</string>
+    <string name="memory_editor_base_address">Basis MC: %1$s</string>
+    <string name="memory_editor_base_loading">Memuat alamat basis…</string>
+    <string name="memory_editor_base_not_found">Basis MC: Tidak ditemukan</string>
     <string name="memory_overlay_config_title">Konfigurasi Tombol Overlay</string>
     <string name="memory_overlay_name">Nama Tombol</string>
     <string name="memory_overlay_name_hint">misalnya Zoom</string>

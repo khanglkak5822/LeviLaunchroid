@@ -77,6 +77,7 @@ public class ModsFullscreenActivity extends BaseActivity {
 
                             @Override
                             public void onError(String errorMessage) {
+                                Toast.makeText(ModsFullscreenActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
@@ -122,6 +123,11 @@ public class ModsFullscreenActivity extends BaseActivity {
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this, new MainViewModelFactory(getApplication())).get(MainViewModel.class);
 
+        org.levimc.launcher.core.versions.GameVersion selectedVersion = VersionManager.get(this).getSelectedVersion();
+        if (selectedVersion != null) {
+            viewModel.setCurrentVersion(selectedVersion);
+        }
+
         viewModel.getModsLiveData().observe(this, this::updateModsUI);
     }
 
@@ -138,7 +144,7 @@ public class ModsFullscreenActivity extends BaseActivity {
 
         modsAdapter.setOnModClickListener((mod, position, sharedView) -> {
             Intent intent = new Intent(this, ModDetailActivity.class);
-            intent.putExtra("mod_filename", mod.getFileName());
+            intent.putExtra("mod_filename", mod.getId());
             intent.putExtra("mod_position", position);
             ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                     this,
@@ -150,7 +156,7 @@ public class ModsFullscreenActivity extends BaseActivity {
 
         modsAdapter.setOnModEnableChangeListener((mod, enabled) -> {
             if (viewModel != null) {
-                viewModel.setModEnabled(mod.getFileName(), enabled);
+                viewModel.setModEnabled(mod.getId(), enabled);
                 updateModsCount(); 
             }
         });
@@ -211,7 +217,10 @@ public class ModsFullscreenActivity extends BaseActivity {
     private void refreshInbuiltMods() {
         List<InbuiltMod> addedMods = inbuiltModManager.getAddedMods(this);
         inbuiltModsAdapter.updateMods(addedMods);
-        boolean hasInbuilt = !addedMods.isEmpty();
+        
+        boolean modMenuEnabled = inbuiltModManager.isModMenuEnabled();
+        boolean hasInbuilt = !addedMods.isEmpty() && !modMenuEnabled;
+        
         inbuiltModsRecycler.setVisibility(hasInbuilt ? View.VISIBLE : View.GONE);
         if (inbuiltModsHeader != null) {
             inbuiltModsHeader.setVisibility(hasInbuilt ? View.VISIBLE : View.GONE);
@@ -223,7 +232,8 @@ public class ModsFullscreenActivity extends BaseActivity {
         List<Mod> mods = viewModel.getModsLiveData().getValue();
         List<InbuiltMod> inbuiltMods = inbuiltModManager.getAddedMods(this);
         boolean hasExternal = mods != null && !mods.isEmpty();
-        boolean hasInbuilt = !inbuiltMods.isEmpty();
+        boolean modMenuEnabled = inbuiltModManager.isModMenuEnabled();
+        boolean hasInbuilt = !inbuiltMods.isEmpty() && !modMenuEnabled;
         if (externalModsHeader != null) {
             externalModsHeader.setVisibility(hasExternal && hasInbuilt ? View.VISIBLE : View.GONE);
         }
@@ -249,8 +259,9 @@ public class ModsFullscreenActivity extends BaseActivity {
         InbuiltModManager inbuiltManager = InbuiltModManager.getInstance(this);
         List<InbuiltMod> inbuiltMods = inbuiltManager.getAddedMods(this);
         
-        int total = (mods != null ? mods.size() : 0) + inbuiltMods.size();
-        int enabled = inbuiltMods.size();
+        boolean modMenuEnabled = inbuiltManager.isModMenuEnabled();
+        int total = (mods != null ? mods.size() : 0) + (modMenuEnabled ? 0 : inbuiltMods.size());
+        int enabled = modMenuEnabled ? 0 : inbuiltMods.size();
         
         if (mods != null) {
             for (Mod mod : mods) {

@@ -49,7 +49,7 @@ public class MemoryEditorOverlay {
     private EditText inputValue;
     private Button btnSearch, btnFilter, btnReset;
     private Button btnTabSearch, btnTabSaved;
-    private TextView resultCount;
+    private TextView resultCount, baseAddressText;
     private RecyclerView resultsRecycler;
     private MemoryResultAdapter resultAdapter;
     private MemorySavedAdapter savedAdapter;
@@ -130,10 +130,13 @@ public class MemoryEditorOverlay {
         btnTabSearch = overlayView.findViewById(R.id.btn_tab_search);
         btnTabSaved = overlayView.findViewById(R.id.btn_tab_saved);
         resultCount = overlayView.findViewById(R.id.result_count);
+        baseAddressText = overlayView.findViewById(R.id.base_address_text);
         resultsRecycler = overlayView.findViewById(R.id.results_recycler);
         ImageButton btnClose = overlayView.findViewById(R.id.btn_close);
         View header = overlayView.findViewById(R.id.editor_header);
         View resizeHandle = overlayView.findViewById(R.id.resize_handle);
+        
+        updateBaseAddress();
 
         String[] types = {"Byte", "Word", "Dword", "Qword", "Float", "Double", "XOR", "Auto"};
         ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(activity, R.layout.spinner_item_memory, types);
@@ -341,6 +344,22 @@ public class MemoryEditorOverlay {
     private void updateResultCount() {
         int count = MemorySearchEngine.getInstance().getResultCount();
         resultCount.setText(count + " results");
+    }
+
+    private void updateBaseAddress() {
+        executor.execute(() -> {
+            long baseAddr = MemoryEditorNative.nativeGetMinecraftBase();
+            handler.post(() -> {
+                if (baseAddressText != null) {
+                    if (baseAddr != 0) {
+                        String hexAddr = String.format("0x%x", baseAddr);
+                        baseAddressText.setText(activity.getString(R.string.memory_editor_base_address, hexAddr));
+                    } else {
+                        baseAddressText.setText(R.string.memory_editor_base_not_found);
+                    }
+                }
+            });
+        });
     }
 
     private void refreshSearchResults() {

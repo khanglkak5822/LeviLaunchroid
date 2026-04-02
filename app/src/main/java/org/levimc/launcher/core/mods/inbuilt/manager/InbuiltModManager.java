@@ -18,7 +18,6 @@ public class InbuiltModManager {
     private static final String KEY_ADDED_MODS = "added_mods";
     private static final String KEY_AUTOSPRINT_KEY = "autosprint_key";
     private static final String KEY_OVERLAY_BUTTON_SIZE_PREFIX = "overlay_button_size_";
-    private static final String KEY_OVERLAY_BUTTON_SIZE_GLOBAL = "overlay_button_size";
     private static final String KEY_OVERLAY_OPACITY_PREFIX = "overlay_opacity_";
     private static final String KEY_MOD_MENU_ENABLED = "mod_menu_enabled";
     private static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
@@ -26,12 +25,14 @@ public class InbuiltModManager {
     private static final String KEY_MOD_MENU_BUTTON_OPACITY = "mod_menu_button_opacity";
     private static final String KEY_ZOOM_LEVEL = "zoom_level";
     private static final String KEY_ZOOM_KEYBIND = "zoom_keybind";
+    private static final String KEY_CURSOR_SENSITIVITY = "cursor_sensitivity";
     private static final String KEY_OVERLAY_POSITION_X_PREFIX = "overlay_pos_x_";
     private static final String KEY_OVERLAY_POSITION_Y_PREFIX = "overlay_pos_y_";
     private static final String KEY_OVERLAY_LOCK_PREFIX = "overlay_lock_";
     private static final int DEFAULT_OVERLAY_BUTTON_SIZE = 56;
     private static final int DEFAULT_OVERLAY_OPACITY = 100;
     private static final int DEFAULT_ZOOM_LEVEL = 50;
+    private static final int DEFAULT_CURSOR_SENSITIVITY = 120;
 
     private static volatile InbuiltModManager instance;
     private final SharedPreferences prefs;
@@ -82,6 +83,9 @@ public class InbuiltModManager {
         mods.add(new InbuiltMod(ModIds.SNAPLOOK,
             context.getString(R.string.inbuilt_mod_snaplook),
             context.getString(R.string.inbuilt_mod_snaplook_desc), false, addedMods.contains(ModIds.SNAPLOOK)));
+        mods.add(new InbuiltMod(ModIds.VIRTUAL_CURSOR,
+            context.getString(R.string.inbuilt_mod_virtual_cursor),
+            context.getString(R.string.inbuilt_mod_virtual_cursor_desc), false, addedMods.contains(ModIds.VIRTUAL_CURSOR)));
         return mods;
     }
 
@@ -196,6 +200,14 @@ public class InbuiltModManager {
 
     public void setZoomKeybind(int keyCode) {
         prefs.edit().putInt(KEY_ZOOM_KEYBIND, keyCode).apply();
+    }
+
+    public int getCursorSensitivity() {
+        return prefs.getInt(KEY_CURSOR_SENSITIVITY, DEFAULT_CURSOR_SENSITIVITY);
+    }
+
+    public void setCursorSensitivity(int sensitivity) {
+        prefs.edit().putInt(KEY_CURSOR_SENSITIVITY, Math.max(10, Math.min(300, sensitivity))).apply();
     }
 
     public int getOverlayPositionX(String modId, int defaultX) {

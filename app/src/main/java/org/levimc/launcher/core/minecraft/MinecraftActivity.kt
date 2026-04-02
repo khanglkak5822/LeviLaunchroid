@@ -3,7 +3,6 @@ package org.levimc.launcher.core.minecraft
 import android.content.Intent
 import android.content.res.AssetManager
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.widget.Toast
@@ -54,9 +53,7 @@ class MinecraftActivity : MainActivity() {
 
             try {
                 System.loadLibrary("preloader")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to load preloader: ${e.message}")
-            }
+            } catch (e: Exception) {}
 
             if (!gameManager.loadLibrary("minecraftpe")) {
                 throw RuntimeException("Failed to load libminecraftpe.so")
@@ -114,6 +111,20 @@ class MinecraftActivity : MainActivity() {
         }
         
         overlayManager?.handleTouchEvent(event)
+
+        if (org.levimc.launcher.core.mods.inbuilt.overlay.VirtualCursorMod.isActive()) {
+            org.levimc.launcher.core.mods.inbuilt.overlay.VirtualCursorMod.processTouchEvent(event, this)
+            return true
+        }
+
+        return super.dispatchTouchEvent(event)
+    }
+
+    fun dispatchGenericMotionEventToGame(event: MotionEvent): Boolean {
+        return super.dispatchGenericMotionEvent(event)
+    }
+
+    fun dispatchTouchEventToGame(event: MotionEvent): Boolean {
         return super.dispatchTouchEvent(event)
     }
 
@@ -244,9 +255,5 @@ class MinecraftActivity : MainActivity() {
         } else {
             super.getCacheDir()
         }
-    }
-
-    companion object {
-        private const val TAG = "MinecraftActivity"
     }
 }
