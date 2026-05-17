@@ -29,8 +29,8 @@
     <string name="ms_add_account_subtitle">Войти через Microsoft</string>
 
     <!-- Диалоги -->
-    <string name="resourcepack_detected_title">Обнаружен набор ресурсов</string>
-    <string name="resourcepack_detected_message">Хотите запустить игру сейчас?\n\nНабор ресурсов: %s</string>
+    <string name="content_detected_title">Обнаружен контент</string>
+    <string name="content_detected_message">Хотите запустить игру сейчас?\n\nФайл: %s</string>
     <string name="launch_now">Запустить сейчас</string>
     <string name="launch_later">Запустить позже</string>
 
@@ -191,7 +191,7 @@
     <string name="transfer_success">Перенос успешно завершен</string>
     <string name="transfer_failed">Ошибка переноса</string>
     <string name="transfer_same_location">Контент уже находится в этом месте</string>
-    <string name="import_content">Импорт .mcaddon/.mcworld/.mcpack</string>
+    <string name="import_content">Импорт</string>
     <string name="import_content_title">Импорт контента</string>
     <string name="import_content_message">Выберите файл .mcworld, .mcpack или .mcaddon для импорта</string>
     <string name="import_success">Импорт успешно завершен</string>
@@ -387,37 +387,6 @@
     <string name="overlay_button_lock_desc">Запретить перетаскивание и случайные нажатия</string>
     <string name="settings">Настройки</string>
 
-    <!-- Memory Editor -->
-    <string name="memory_editor_enable">Редактор памяти</string>
-    <string name="memory_editor_title">Редактор памяти</string>
-    <string name="memory_editor_minimize">Свернуть</string>
-    <string name="memory_editor_close">Закрыть</string>
-    <string name="memory_editor_value_hint">Значение</string>
-    <string name="memory_editor_search">Поиск</string>
-    <string name="memory_editor_filter">Фильтр</string>
-    <string name="memory_editor_reset">Сброс</string>
-    <string name="memory_editor_address">Адрес</string>
-    <string name="memory_editor_value">Значение</string>
-    <string name="memory_editor_action">Действие</string>
-    <string name="memory_editor_tab_search">Поиск</string>
-    <string name="memory_editor_tab_saved">Сохранённые</string>
-    <string name="memory_editor_save">Сохранить</string>
-    <string name="memory_editor_freeze">Заморозить</string>
-    <string name="memory_editor_delete">Удалить</string>
-    <string name="memory_editor_overlay">Оверлей</string>
-    <string name="memory_editor_base_address">База MC: %1$s</string>
-    <string name="memory_editor_base_loading">Загрузка базового адреса…</string>
-    <string name="memory_editor_base_not_found">База MC: Не найдена</string>
-    <string name="memory_overlay_config_title">Настройка кнопки оверлея</string>
-    <string name="memory_overlay_name">Название кнопки</string>
-    <string name="memory_overlay_name_hint">Например: Здоровье, Скорость</string>
-    <string name="memory_overlay_original_value">Исходное значение</string>
-    <string name="memory_overlay_new_value">Новое значение</string>
-    <string name="memory_overlay_new_value_hint">Введите значение для применения</string>
-    <string name="memory_overlay_toggleable">Переключаемая</string>
-    <string name="memory_editor_warning_title">⚠️ Предупреждение для разработчиков</string>
-    <string name="memory_editor_warning_message">Редактор памяти — это продвинутый инструмент, предназначенный ТОЛЬКО для разработки модов и отладки.\n\nЭта функция НЕ для обычных пользователей. Неправильное использование может привести к:\n• Сбоям игры\n• Повреждению данных\n• Непредвиденному поведению\n\nВключайте только если понимаете, что делаете.</string>
-
     <!-- Extract Structures -->
     <string name="extract_structures">Извлечь структуры</string>
     <string name="no_structures_found">В этом мире не найдено структур</string>
@@ -528,23 +497,5 @@
     <string name="curseforge_importing">Импорт…</string>
     <string name="curseforge_download_failed">Ошибка скачивания</string>
     <string name="curseforge_available_files">Доступные файлы</string>
-
-    <!-- Mascot Messages -->
-    <string name="mascot_message_blocking_nope">Нет нет нет!</string>
-    <string name="mascot_message_blocking_not_yet">Не получится!</string>
-    <string name="mascot_message_blocking_try_again">Попробуй снова~</string>
-    <string name="mascot_message_blocking_hmm_no">Хмм... отказано!</string>
-    <string name="mascot_message_blocking_maybe_later">Может позже, сенпай!</string>
-    <string name="mascot_message_blocking_are_you_sure">Такой настойчивый...</string>
-    <string name="mascot_message_blocking_one_more_time">Ещё разок!</string>
-    <string name="mascot_message_blocking_almost_there">Почти~</string>
-    <string name="mascot_message_blocking_ora_ora">Ора ора ора!</string>
-    <string name="mascot_message_blocking_muda_muda">Муда муда муда!</string>
-    <string name="mascot_message_blocking_nice_try">Хорошая попытка, но нет!</string>
-    <string name="mascot_message_blocking_believe_it">Поверь... НЕТ!</string>
-    <string name="mascot_message_lurk">а? кто-то меня звал?</string>
-    <string name="mascot_message_wave">Приветик! Я буду тебе немножко мешать~</string>
-    <string name="mascot_message_rejected">Извращенец</string>
-    <string name="mascot_message_approve">Ладно, проходи~!</string>
 
 </resources>

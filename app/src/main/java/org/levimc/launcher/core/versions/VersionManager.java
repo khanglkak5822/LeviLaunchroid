@@ -304,6 +304,17 @@ public class VersionManager {
             }
 
             gv.abiList = inferAbiFromNativeLibDir(pi.applicationInfo.nativeLibraryDir, gv);
+
+            File isoFile = new File(context.getDataDir(), "minecraft/" + gv.directoryName + "/version_isolation.txt");
+            if (isoFile.exists()) {
+                gv.versionIsolation = "true".equals(readFileToString(isoFile));
+            }
+            
+            File vertFile = new File(context.getDataDir(), "minecraft/" + gv.directoryName + "/launch_vertically.txt");
+            if (vertFile.exists()) {
+                gv.launchVertically = "true".equals(readFileToString(vertFile));
+            }
+
             installedVersions.add(gv);
         }
 
@@ -411,7 +422,41 @@ public class VersionManager {
 
         gv.abiList = inferAbiFromNativeLibDir(null, gv);
 
+        File isoFile = new File(context.getDataDir(), "minecraft/" + dir.getName() + "/version_isolation.txt");
+        if (isoFile.exists()) {
+            gv.versionIsolation = "true".equals(readFileToString(isoFile));
+        }
+        
+        File vertFile = new File(context.getDataDir(), "minecraft/" + dir.getName() + "/launch_vertically.txt");
+        if (vertFile.exists()) {
+            gv.launchVertically = "true".equals(readFileToString(vertFile));
+        }
+
         return gv;
+    }
+
+    public void setInstanceVersionIsolation(GameVersion version, boolean enabled) {
+        if (version == null) return;
+        version.versionIsolation = enabled;
+        new Thread(() -> {
+            try {
+                File dataDir = new File(context.getDataDir(), "minecraft/" + version.directoryName);
+                if (!dataDir.exists()) dataDir.mkdirs();
+                writeStringToFile(new File(dataDir, "version_isolation.txt"), String.valueOf(enabled));
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    public void setInstanceLaunchVertically(GameVersion version, boolean enabled) {
+        if (version == null) return;
+        version.launchVertically = enabled;
+        new Thread(() -> {
+            try {
+                File dataDir = new File(context.getDataDir(), "minecraft/" + version.directoryName);
+                if (!dataDir.exists()) dataDir.mkdirs();
+                writeStringToFile(new File(dataDir, "launch_vertically.txt"), String.valueOf(enabled));
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     private void restoreSelectedVersion() {

@@ -11,7 +11,6 @@ import android.widget.Toast;
 import org.levimc.launcher.core.mods.ModManager;
 import org.levimc.launcher.core.mods.ModNativeLoader;
 import org.levimc.launcher.core.versions.GameVersion;
-import org.levimc.launcher.settings.FeatureSettings;
 import org.levimc.launcher.ui.dialogs.LoadingDialog;
 import android.util.Log;
 
@@ -86,9 +85,20 @@ public class MinecraftLauncher {
                 loadingDialog = new LoadingDialog(activity);
                 loadingDialog.show();
             });
-            gameManager = GamePackageManager.Companion.getInstance(context.getApplicationContext(), version);
-            fillIntentWithMcPath(sourceIntent, version);
-            launchMinecraftActivity(sourceIntent, version, false);
+
+            new Thread(() -> {
+                try {
+                    gameManager = GamePackageManager.Companion.getInstance(context.getApplicationContext(), version);
+                    fillIntentWithMcPath(sourceIntent, version);
+                    launchMinecraftActivity(sourceIntent, version, false);
+                } catch (Exception e) {
+                    Log.e(TAG, "Launch failed: " + e.getMessage(), e);
+                    activity.runOnUiThread(() -> {
+                        dismissLoading();
+                        showLaunchErrorOnUi("Launch failed: " + e.getMessage());
+                    });
+                }
+            }).start();
         } catch (Exception e) {
             Log.e(TAG, "Launch failed: " + e.getMessage(), e);
             dismissLoading();
@@ -97,12 +107,12 @@ public class MinecraftLauncher {
     }
 
     private void fillIntentWithMcPath(Intent sourceIntent, GameVersion version) {
-        if (FeatureSettings.getInstance().isVersionIsolationEnabled()) {
+        if (!version.isInstalled || version.versionIsolation) {
             sourceIntent.putExtra("MC_PATH", version.versionDir.getAbsolutePath());
             sourceIntent.putExtra("IS_INSTALLED", version.isInstalled);
         } else {
             sourceIntent.putExtra("MC_PATH", "");
-            sourceIntent.putExtra("IS_INSTALLED", false);
+            sourceIntent.putExtra("IS_INSTALLED", version.isInstalled);
         }
     }
 
@@ -126,6 +136,8 @@ public class MinecraftLauncher {
                 sourceIntent.putExtra("MODS_ENABLED", modsEnabled);
                 sourceIntent.putExtra("MINECRAFT_VERSION", version.versionCode);
                 sourceIntent.putExtra("MINECRAFT_VERSION_DIR", version.directoryName);
+                sourceIntent.putExtra("LAUNCH_VERTICALLY", version.launchVertically);
+                sourceIntent.putExtra("VERSION_ISOLATION", version.versionIsolation);
 
                 if (shouldLoadHttpClient(version)) {
                     gameManager.loadLibrary("c++_shared");

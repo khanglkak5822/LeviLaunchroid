@@ -2,47 +2,70 @@ package org.levimc.launcher.ui.activities;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.util.Base64;
-import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
-import com.google.android.material.switchmaterial.SwitchMaterial;
 import android.widget.TextView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.widget.Toast;
+
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import org.levimc.launcher.R;
 import org.levimc.launcher.settings.FeatureSettings;
-import org.levimc.launcher.ui.adapter.SettingsAdapter;
 import org.levimc.launcher.ui.animation.DynamicAnim;
-import org.levimc.launcher.ui.dialogs.CustomAlertDialog;
 import org.levimc.launcher.ui.dialogs.LogcatOverlayManager;
 import org.levimc.launcher.util.GithubReleaseUpdater;
 import org.levimc.launcher.util.LanguageManager;
 import org.levimc.launcher.util.PermissionsHandler;
+import org.levimc.launcher.util.PersonalizationManager;
 import org.levimc.launcher.util.ThemeManager;
 
 public class SettingsActivity extends BaseActivity {
 
-    private LinearLayout settingsItemsContainer;
-    private RecyclerView settingsRecyclerView;
     private PermissionsHandler permissionsHandler;
     private ActivityResultLauncher<Intent> permissionResultLauncher;
+    private ActivityResultLauncher<Intent> bgImagePickerLauncher;
     private int updateButtonTapCount = 0;
     private long lastUpdateButtonTapTime = 0;
     private static final int EASTER_EGG_TAP_COUNT = 3;
     private static final long TAP_TIMEOUT_MS = 2000;
+
+    private TextView tabBasic;
+    private TextView tabPersonalize;
+    private TextView tabUpdates;
+    private TextView tabAbout;
+
+    private View sectionBasic;
+    private View sectionPersonalize;
+    private View sectionUpdates;
+    private View sectionAbout;
+
+    private static final String KEY_SELECTED_TAB = "selected_tab_index";
+    private int selectedTabIndex = 0;
+
+    private PersonalizationManager personalizationManager;
+    private LinearLayout colorGridContainer;
+    private LinearLayout moreColorsContainer;
+    private TextView bgImageStatus;
+    private ImageView bgImagePreview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +74,13 @@ public class SettingsActivity extends BaseActivity {
 
         DynamicAnim.applyPressScaleRecursively(findViewById(android.R.id.content));
 
-        ImageButton backButton = findViewById(R.id.back_button);
-        if (backButton != null) backButton.setOnClickListener(v -> finish());
+        setupNavBar();
 
-        settingsRecyclerView = findViewById(R.id.settings_recycler);
-        settingsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        personalizationManager = new PersonalizationManager(this);
+
+        if (savedInstanceState != null) {
+            selectedTabIndex = savedInstanceState.getInt(KEY_SELECTED_TAB, 0);
+        }
 
         permissionsHandler = PermissionsHandler.getInstance();
         permissionResultLauncher = registerForActivityResult(
@@ -68,49 +93,458 @@ public class SettingsActivity extends BaseActivity {
         );
         permissionsHandler.setActivity(this, permissionResultLauncher);
 
-        settingsRecyclerView.setAdapter(new SettingsAdapter(container -> {
-            settingsItemsContainer = container;
+        bgImagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            personalizationManager.setBackgroundImage(uri, this);
+                            updateBgImageUI();
+                            recreate();
+                        }
+                    }
+                }
+        );
 
-            ThemeManager themeManager = new ThemeManager(this);
-            LanguageManager languageManager = new LanguageManager(this);
-            FeatureSettings fs = FeatureSettings.getInstance();
-            addThemeSelectorItem(themeManager);
-            addLanguageSelectorItem(languageManager);
-            addMemoryEditorSwitchItem(fs);
-            addSwitchItem(getString(R.string.version_isolation), fs.isVersionIsolationEnabled(), (btn, checked) -> fs.setVersionIsolationEnabled(checked));
-            addSwitchItem(getString(R.string.launcher_managed_mc_login), fs.isLauncherManagedMcLoginEnabled(), (btn, checked) -> fs.setLauncherManagedMcLoginEnabled(checked));
-            addSwitchItem(getString(R.string.show_logcat_overlay), fs.isLogcatOverlayEnabled(), (btn, checked) -> {
-                fs.setLogcatOverlayEnabled(checked);
-                try {
-                    LogcatOverlayManager mgr = LogcatOverlayManager.getInstance();
-                    if (mgr != null) mgr.refreshVisibility();
-                } catch (Throwable ignored) {}
-            });
+        initTabs();
+        setupBasicSection();
+        setupPersonalizeSection();
+        setupUpdatesSection();
+        setupAboutSection();
 
-            try {
-                String localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-                addActionButton(
-                        getString(R.string.version_prefix) + localVersion,
-                        getString(R.string.check_update),
-                        v -> handleUpdateButtonClick()
-                );
-            } catch (PackageManager.NameNotFoundException ignored) {
+        TextView[] tabs = {tabBasic, tabPersonalize, tabUpdates, tabAbout};
+        selectTab(tabs[selectedTabIndex]);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_TAB, selectedTabIndex);
+    }
+
+    private void initTabs() {
+        tabBasic = findViewById(R.id.tab_basic);
+        tabPersonalize = findViewById(R.id.tab_personalize);
+        tabUpdates = findViewById(R.id.tab_updates);
+        tabAbout = findViewById(R.id.tab_about);
+
+        sectionBasic = findViewById(R.id.section_basic);
+        sectionPersonalize = findViewById(R.id.section_personalize);
+        sectionUpdates = findViewById(R.id.section_updates);
+        sectionAbout = findViewById(R.id.section_about);
+
+        tabBasic.setOnClickListener(v -> { selectedTabIndex = 0; selectTab(tabBasic); });
+        tabPersonalize.setOnClickListener(v -> { selectedTabIndex = 1; selectTab(tabPersonalize); });
+        tabUpdates.setOnClickListener(v -> { selectedTabIndex = 2; selectTab(tabUpdates); });
+        tabAbout.setOnClickListener(v -> { selectedTabIndex = 3; selectTab(tabAbout); });
+    }
+
+    private void selectTab(TextView selectedTab) {
+        TextView[] tabs = {tabBasic, tabPersonalize, tabUpdates, tabAbout};
+        View[] sections = {sectionBasic, sectionPersonalize, sectionUpdates, sectionAbout};
+
+        int accent = personalizationManager.getAccentColor();
+
+        for (int i = 0; i < tabs.length; i++) {
+            boolean isSelected = tabs[i] == selectedTab;
+
+            if (isSelected) {
+                if (accent != 0) {
+                    android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                    gd.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                    gd.setColor(accent);
+                    gd.setCornerRadius(16 * getResources().getDisplayMetrics().density);
+                    tabs[i].setBackground(gd);
+                } else {
+                    tabs[i].setBackgroundResource(R.drawable.bg_tab_selected);
+                }
+                tabs[i].setTextColor(Color.WHITE);
+                tabs[i].setTextSize(13);
+            } else {
+                tabs[i].setBackgroundResource(R.drawable.bg_tab_unselected);
+                tabs[i].setTextColor(getColor(R.color.text_secondary));
             }
-        }));
 
-        settingsRecyclerView.post(() -> DynamicAnim.staggerRecyclerChildren(settingsRecyclerView));
+            if (isSelected) {
+                sections[i].setVisibility(View.VISIBLE);
+                sections[i].setAlpha(0f);
+                sections[i].animate().alpha(1f).setDuration(200).start();
+            } else {
+                sections[i].setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void setupBasicSection() {
+        LanguageManager languageManager = new LanguageManager(this);
+        FeatureSettings fs = FeatureSettings.getInstance();
+
+        String[] languageOptions = {
+                getString(R.string.english),
+                getString(R.string.chinese),
+                getString(R.string.russian),
+                getString(R.string.indonesian)
+        };
+
+        String currentCode = languageManager.getCurrentLanguage();
+        int defaultIdx = switch (currentCode) {
+            case "zh", "zh-CN" -> 1;
+            case "ru" -> 2;
+            case "idn" -> 3;
+            default -> 0;
+        };
+
+        TextView languageCurrent = findViewById(R.id.language_current);
+        languageCurrent.setText(languageOptions[defaultIdx]);
+
+        Spinner languageSpinner = findViewById(R.id.language_spinner);
+        ArrayAdapter<String> langAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, languageOptions);
+        langAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        languageSpinner.setAdapter(langAdapter);
+        languageSpinner.setPopupBackgroundResource(R.drawable.bg_popup_menu_rounded);
+        languageSpinner.setSelection(defaultIdx);
+        languageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String code = switch (position) {
+                    case 1 -> "zh-CN";
+                    case 2 -> "ru";
+                    case 3 -> "idn";
+                    default -> "en";
+                };
+                if (!code.equals(languageManager.getCurrentLanguage())) {
+                    languageManager.setAppLanguage(code);
+                }
+                languageCurrent.setText(languageOptions[position]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        SwitchMaterial switchLogcat = findViewById(R.id.switch_logcat);
+        switchLogcat.setChecked(fs.isLogcatOverlayEnabled());
+        switchLogcat.setOnCheckedChangeListener((btn, checked) -> {
+            fs.setLogcatOverlayEnabled(checked);
+            try {
+                LogcatOverlayManager mgr = LogcatOverlayManager.getInstance();
+                if (mgr != null) mgr.refreshVisibility();
+            } catch (Throwable ignored) {}
+        });
+
+        SwitchMaterial switchManagedLogin = findViewById(R.id.switch_managed_login);
+        switchManagedLogin.setChecked(fs.isLauncherManagedMcLoginEnabled());
+        switchManagedLogin.setOnCheckedChangeListener((btn, checked) -> fs.setLauncherManagedMcLoginEnabled(checked));
+    }
+
+    private void setupPersonalizeSection() {
+        ThemeManager themeManager = new ThemeManager(this);
+
+        View itemSystem = findViewById(R.id.theme_item_system);
+        View itemLight = findViewById(R.id.theme_item_light);
+        View itemDark = findViewById(R.id.theme_item_dark);
+
+        refreshThemeSelectionUI();
+
+        if (itemSystem != null && itemLight != null && itemDark != null) {
+            itemSystem.setOnClickListener(v -> { themeManager.setThemeMode(0); });
+            itemLight.setOnClickListener(v -> { themeManager.setThemeMode(1); });
+            itemDark.setOnClickListener(v -> { themeManager.setThemeMode(2); });
+        }
+
+        setupColorPicker();
+        setupBackgroundImagePicker();
+    }
+
+    private void refreshThemeSelectionUI() {
+        ThemeManager themeManager = new ThemeManager(this);
+        int currentMode = themeManager.getCurrentMode();
+
+        TextView textSystem = findViewById(R.id.theme_text_system);
+        TextView textLight = findViewById(R.id.theme_text_light);
+        TextView textDark = findViewById(R.id.theme_text_dark);
+
+        ImageView iconSystem = findViewById(R.id.theme_icon_system);
+        ImageView iconLight = findViewById(R.id.theme_icon_light);
+        ImageView iconDark = findViewById(R.id.theme_icon_dark);
+
+        int accent = personalizationManager.getAccentColor();
+        int selectedColor = accent != 0 ? accent : getColor(R.color.on_surface);
+        int unselectedColor = getColor(R.color.text_secondary);
+
+        if (textSystem != null) {
+            textSystem.setTypeface(null, currentMode == 0 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            textSystem.setTextColor(currentMode == 0 ? selectedColor : getColor(R.color.on_surface));
+        }
+        if (textLight != null) {
+            textLight.setTypeface(null, currentMode == 1 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            textLight.setTextColor(currentMode == 1 ? selectedColor : getColor(R.color.on_surface));
+        }
+        if (textDark != null) {
+            textDark.setTypeface(null, currentMode == 2 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            textDark.setTextColor(currentMode == 2 ? selectedColor : getColor(R.color.on_surface));
+        }
+
+        if (iconSystem != null) iconSystem.setImageTintList(android.content.res.ColorStateList.valueOf(currentMode == 0 ? selectedColor : unselectedColor));
+        if (iconLight != null) iconLight.setImageTintList(android.content.res.ColorStateList.valueOf(currentMode == 1 ? selectedColor : unselectedColor));
+        if (iconDark != null) iconDark.setImageTintList(android.content.res.ColorStateList.valueOf(currentMode == 2 ? selectedColor : unselectedColor));
+    }
+
+    private void setupColorPicker() {
+        colorGridContainer = findViewById(R.id.color_preset_grid);
+        moreColorsContainer = findViewById(R.id.color_more_grid);
+
+        if (colorGridContainer != null && moreColorsContainer != null) {
+            int currentAccent = personalizationManager.getAccentColor();
+            buildColorGrid(colorGridContainer, PersonalizationManager.PRESET_COLORS, currentAccent);
+            buildColorGrid(moreColorsContainer, PersonalizationManager.MORE_COLORS, currentAccent);
+        }
+
+        android.widget.EditText inputCustomColor = findViewById(R.id.input_custom_color);
+        Button btnApplyColor = findViewById(R.id.btn_apply_color);
+        if (inputCustomColor != null && btnApplyColor != null) {
+            btnApplyColor.setOnClickListener(v -> {
+                String input = inputCustomColor.getText().toString().trim();
+                try {
+                    int color;
+                    if (input.startsWith("#")) {
+                        color = Color.parseColor(input);
+                    } else if (input.contains(",")) {
+                        String[] parts = input.split(",");
+                        if (parts.length == 3) {
+                            color = Color.rgb(Integer.parseInt(parts[0].trim()),
+                                    Integer.parseInt(parts[1].trim()),
+                                    Integer.parseInt(parts[2].trim()));
+                        } else {
+                            throw new IllegalArgumentException("Invalid RGB format");
+                        }
+                    } else {
+                        color = Color.parseColor("#" + input);
+                    }
+                    personalizationManager.setAccentColor(color);
+                    refreshColorPickerInPlace();
+                } catch (Exception e) {
+                    Toast.makeText(this, "Invalid color format", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void buildColorGrid(LinearLayout container, int[] colors, int selectedColor) {
+        container.removeAllViews();
+
+        float density = getResources().getDisplayMetrics().density;
+        int circleSize = (int) (32 * density);
+        int margin = (int) (4 * density);
+        int checkSize = (int) (14 * density);
+
+        int columns = 15;
+        int index = 0;
+        while (index < colors.length) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            for (int col = 0; col < columns && index < colors.length; col++, index++) {
+                int color = colors[index];
+
+                FrameLayout wrapper = new FrameLayout(this);
+                LinearLayout.LayoutParams wrapParams = new LinearLayout.LayoutParams(circleSize, circleSize);
+                wrapParams.setMargins(margin, margin, margin, margin);
+                wrapper.setLayoutParams(wrapParams);
+
+                View circle = new View(this);
+                circle.setLayoutParams(new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT));
+                GradientDrawable circleDrawable = new GradientDrawable();
+                circleDrawable.setShape(GradientDrawable.OVAL);
+                circleDrawable.setColor(color);
+                if (color == selectedColor) {
+                    circleDrawable.setStroke((int) (2 * density), Color.WHITE);
+                }
+                circle.setBackground(circleDrawable);
+                wrapper.addView(circle);
+
+                if (color == selectedColor) {
+                    ImageView check = new ImageView(this);
+                    FrameLayout.LayoutParams checkParams = new FrameLayout.LayoutParams(checkSize, checkSize);
+                    checkParams.gravity = Gravity.CENTER;
+                    check.setLayoutParams(checkParams);
+                    check.setImageResource(R.drawable.ic_check);
+                    check.setColorFilter(Color.WHITE);
+                    wrapper.addView(check);
+                }
+
+                wrapper.setClickable(true);
+                wrapper.setFocusable(true);
+                final int finalColor = color;
+                wrapper.setOnClickListener(v -> {
+                    personalizationManager.setAccentColor(finalColor);
+                    refreshColorPickerInPlace();
+                });
+                DynamicAnim.applyPressScale(wrapper);
+
+                row.addView(wrapper);
+            }
+
+            container.addView(row);
+        }
+
+    }
+
+    private void refreshColorPickerInPlace() {
+        setupColorPicker();
+        PersonalizationManager pm = new PersonalizationManager(this);
+        int accent = pm.getAccentColor();
+        
+        pm.applyToActivity(this);
+
+        refreshThemeSelectionUI();
+        
+        TextView[] tabs = {tabBasic, tabPersonalize, tabUpdates, tabAbout};
+        selectTab(tabs[selectedTabIndex]);
+        
+        View settingsTitle = findViewById(R.id.settings_title);
+        if (settingsTitle instanceof TextView && accent != 0) {
+            ((TextView) settingsTitle).setTextColor(accent);
+        }
+        
+        Button btnSelectImage = findViewById(R.id.btn_select_bg_image);
+        if (btnSelectImage != null && accent != 0) {
+            btnSelectImage.setBackgroundTintList(ColorStateList.valueOf(accent));
+            btnSelectImage.setTextColor(Color.WHITE);
+        }
+        
+        Button btnCheckUpdate = findViewById(R.id.btn_check_update);
+        if (btnCheckUpdate != null && accent != 0) {
+            btnCheckUpdate.setBackgroundTintList(ColorStateList.valueOf(accent));
+            btnCheckUpdate.setTextColor(Color.WHITE);
+        }
+        
+        SwitchMaterial switchLogcat = findViewById(R.id.switch_logcat);
+        if (switchLogcat != null && accent != 0) {
+            int[][] states = {{android.R.attr.state_checked}, {}};
+            switchLogcat.setThumbTintList(new ColorStateList(states, new int[]{accent, 0xFFAAAAAA}));
+            int trackChecked = Color.argb(100, Color.red(accent), Color.green(accent), Color.blue(accent));
+            switchLogcat.setTrackTintList(new ColorStateList(states, new int[]{trackChecked, 0xFF555555}));
+        }
+        
+        SwitchMaterial switchManagedLogin = findViewById(R.id.switch_managed_login);
+        if (switchManagedLogin != null && accent != 0) {
+            int[][] states = {{android.R.attr.state_checked}, {}};
+            switchManagedLogin.setThumbTintList(new ColorStateList(states, new int[]{accent, 0xFFAAAAAA}));
+            int trackChecked = Color.argb(100, Color.red(accent), Color.green(accent), Color.blue(accent));
+            switchManagedLogin.setTrackTintList(new ColorStateList(states, new int[]{trackChecked, 0xFF555555}));
+        }
+        
+        TextView navAppName = findViewById(R.id.nav_app_name);
+        if (navAppName != null && accent != 0) {
+            pm.applySubtleWhiteGradient(navAppName, accent, 0.35f, false);
+        }
+        
+        Button navSignInBtn = findViewById(R.id.nav_sign_in_button);
+        if (navSignInBtn != null && accent != 0) {
+            navSignInBtn.setBackgroundTintList(ColorStateList.valueOf(accent));
+            navSignInBtn.setTextColor(Color.WHITE);
+        }
+        
+        int[] navTabIds = {R.id.nav_tab_launch, R.id.nav_tab_instances, R.id.nav_tab_about, R.id.nav_tab_settings};
+        for (int id : navTabIds) {
+            TextView navTab = findViewById(id);
+            if (navTab != null && id == R.id.nav_tab_settings && accent != 0) {
+                navTab.setTextColor(accent);
+                navTab.setTypeface(navTab.getTypeface(), android.graphics.Typeface.BOLD);
+                androidx.core.widget.TextViewCompat.setCompoundDrawableTintList(navTab, ColorStateList.valueOf(accent));
+            }
+        }
+    }
+
+    private void setupBackgroundImagePicker() {
+        bgImageStatus = findViewById(R.id.bg_image_status);
+        bgImagePreview = findViewById(R.id.bg_image_preview);
+        Button btnSelectImage = findViewById(R.id.btn_select_bg_image);
+        Button btnClearImage = findViewById(R.id.btn_clear_bg_image);
+
+        if (btnSelectImage == null) return;
+
+        updateBgImageUI();
+
+        btnSelectImage.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            bgImagePickerLauncher.launch(intent);
+        });
+
+        if (btnClearImage != null) {
+            btnClearImage.setOnClickListener(v -> {
+                personalizationManager.clearBackgroundImage();
+                updateBgImageUI();
+                recreate();
+            });
+        }
+    }
+
+    private void updateBgImageUI() {
+        if (bgImageStatus == null) return;
+        if (personalizationManager.hasBackgroundImage()) {
+            bgImageStatus.setText(R.string.bg_image_selected);
+            if (bgImagePreview != null) {
+                android.graphics.Bitmap bmp = personalizationManager.loadBackgroundBitmap();
+                if (bmp != null) {
+                    bgImagePreview.setImageBitmap(bmp);
+                    bgImagePreview.setVisibility(View.VISIBLE);
+                }
+            }
+            View btnClear = findViewById(R.id.btn_clear_bg_image);
+            if (btnClear != null) btnClear.setVisibility(View.VISIBLE);
+        } else {
+            bgImageStatus.setText(R.string.bg_image_none);
+            if (bgImagePreview != null) {
+                bgImagePreview.setImageDrawable(null);
+                bgImagePreview.setVisibility(View.GONE);
+            }
+            View btnClear = findViewById(R.id.btn_clear_bg_image);
+            if (btnClear != null) btnClear.setVisibility(View.GONE);
+        }
+    }
+
+
+
+    private void setupUpdatesSection() {
+        try {
+            String localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            TextView versionText = findViewById(R.id.version_text);
+            versionText.setText(getString(R.string.version_prefix) + localVersion);
+        } catch (PackageManager.NameNotFoundException ignored) {
+        }
+
+        Button btnCheckUpdate = findViewById(R.id.btn_check_update);
+        btnCheckUpdate.setOnClickListener(v -> handleUpdateButtonClick());
+    }
+
+    private void setupAboutSection() {
+        findViewById(R.id.settings_btn_github).setOnClickListener(v ->
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/LiteLDev/LeviLaunchroid"))));
+
+        findViewById(R.id.settings_btn_discord).setOnClickListener(v ->
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/jsnzw4ueAt"))));
     }
 
     private void handleUpdateButtonClick() {
         long currentTime = System.currentTimeMillis();
-        
+
         if (currentTime - lastUpdateButtonTapTime > TAP_TIMEOUT_MS) {
             updateButtonTapCount = 0;
         }
-        
+
         updateButtonTapCount++;
         lastUpdateButtonTapTime = currentTime;
-        
+
         if (updateButtonTapCount >= EASTER_EGG_TAP_COUNT) {
             updateButtonTapCount = 0;
             triggerEasterEgg();
@@ -130,155 +564,8 @@ public class SettingsActivity extends BaseActivity {
         }
     }
 
-    private void addSwitchItem(String label, boolean defChecked, SwitchMaterial.OnCheckedChangeListener listener) {
-        View ll = LayoutInflater.from(this).inflate(R.layout.item_settings_switch, settingsItemsContainer, false);
-        ((TextView) ll.findViewById(R.id.tv_title)).setText(label);
-        SwitchMaterial sw = ll.findViewById(R.id.switch_value);
-        sw.setChecked(defChecked);
-        if (listener != null) sw.setOnCheckedChangeListener(listener);
-        settingsItemsContainer.addView(ll);
-    }
-
-    private void addMemoryEditorSwitchItem(FeatureSettings fs) {
-        View ll = LayoutInflater.from(this).inflate(R.layout.item_settings_switch, settingsItemsContainer, false);
-        ((TextView) ll.findViewById(R.id.tv_title)).setText(getString(R.string.memory_editor_enable));
-        SwitchMaterial sw = ll.findViewById(R.id.switch_value);
-        sw.setChecked(fs.isMemoryEditorEnabled());
-        
-        sw.setOnCheckedChangeListener((btn, checked) -> {
-            if (checked && !fs.isMemoryEditorEnabled()) {
-                sw.setChecked(false);
-                showMemoryEditorWarningDialog(sw, fs);
-            } else if (!checked) {
-                fs.setMemoryEditorEnabled(false);
-            }
-        });
-        settingsItemsContainer.addView(ll);
-    }
-
-    private void showMemoryEditorWarningDialog(SwitchMaterial sw, FeatureSettings fs) {
-        CustomAlertDialog dialog = new CustomAlertDialog(this);
-        final int[] countdown = {5};
-        final String confirmText = getString(R.string.confirm);
-        
-        dialog.setTitleText(getString(R.string.memory_editor_warning_title))
-              .setMessage(getString(R.string.memory_editor_warning_message))
-              .setUseBorderedBackground(true)
-              .setBlurBackground(true)
-              .setPositiveButton(confirmText + " (" + countdown[0] + ")", null)
-              .setNegativeButton(getString(R.string.cancel), null);
-        
-        dialog.show();
-        
-        Button positiveBtn = dialog.getPositiveButton();
-        if (positiveBtn != null) {
-            positiveBtn.setEnabled(false);
-            positiveBtn.setAlpha(0.5f);
-        }
-        
-        CountDownTimer timer = new CountDownTimer(5000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                countdown[0] = (int) (millisUntilFinished / 1000) + 1;
-                if (positiveBtn != null) {
-                    positiveBtn.setText(confirmText + " (" + countdown[0] + ")");
-                }
-            }
-
-            @Override
-            public void onFinish() {
-                if (positiveBtn != null) {
-                    positiveBtn.setText(confirmText);
-                    positiveBtn.setEnabled(true);
-                    positiveBtn.setAlpha(1.0f);
-                    positiveBtn.setOnClickListener(v -> {
-                        fs.setMemoryEditorEnabled(true);
-                        sw.setChecked(true);
-                        dialog.dismiss();
-                    });
-                }
-            }
-        };
-        timer.start();
-        
-        dialog.setOnDismissListener(d -> timer.cancel());
-    }
-
-    private Spinner addSpinnerItem(String label, String[] options, int defaultIdx) {
-        View ll = LayoutInflater.from(this).inflate(R.layout.item_settings_spinner, settingsItemsContainer, false);
-        ((TextView) ll.findViewById(R.id.tv_title)).setText(label);
-        Spinner spinner = ll.findViewById(R.id.spinner_value);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setPopupBackgroundResource(R.drawable.bg_popup_menu_rounded);
-        DynamicAnim.applyPressScale(spinner);
-        spinner.setSelection(defaultIdx);
-        settingsItemsContainer.addView(ll);
-        return spinner;
-    }
-
-    private void addActionButton(String label, String buttonText, View.OnClickListener listener) {
-        View ll = LayoutInflater.from(this).inflate(R.layout.item_settings_button, settingsItemsContainer, false);
-        ((TextView) ll.findViewById(R.id.tv_title)).setText(label);
-        Button btn = ll.findViewById(R.id.btn_action);
-        btn.setText(buttonText);
-        btn.setOnClickListener(listener);
-        settingsItemsContainer.addView(ll);
-    }
-
-    private void addThemeSelectorItem(ThemeManager themeManager) {
-        String[] themeOptions = {
-                getString(R.string.theme_follow_system),
-                getString(R.string.theme_light),
-                getString(R.string.theme_dark)
-        };
-        int currentMode = themeManager.getCurrentMode();
-        Spinner spinner = addSpinnerItem(getString(R.string.theme_title), themeOptions, currentMode);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                themeManager.setThemeMode(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-    }
-
-    private void addLanguageSelectorItem(LanguageManager languageManager) {
-        String[] languageOptions = {
-                getString(R.string.english),
-                getString(R.string.chinese),
-                getString(R.string.russian),
-                getString(R.string.indonesian)
-        };
-        String currentCode = languageManager.getCurrentLanguage();
-        int defaultIdx = switch (currentCode) {
-            case "zh", "zh-CN" -> 1;
-            case "ru" -> 2;
-            case "idn" -> 3;
-            default -> 0; 
-        };
-        Spinner spinner = addSpinnerItem(getString(R.string.language), languageOptions, defaultIdx);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String code = switch (position) {
-                    case 1 -> "zh-CN";
-                    case 2 -> "ru";
-                    case 3 -> "idn";
-                    default -> "en";
-                };
-                if (!code.equals(languageManager.getCurrentLanguage())) {
-                    languageManager.setAppLanguage(code);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+    private void setupNavBar() {
+        setActiveNavTab(R.id.nav_tab_settings);
+        findViewById(R.id.nav_tab_settings).setOnClickListener(v -> {});
     }
 }
